@@ -12,13 +12,13 @@
   "background_color": "#07130b",
   "categories": ["entertainment", "video"],
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "ГУБАПЫ", "url": "./#/gubaps", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Подписки", "url": "./#/subs", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Мастерская", "url": "./#/studio", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "ГУБАПЫ", "url": "./#/gubaps", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Подписки", "url": "./#/subs", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Мастерская", "url": "./#/studio", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
   ]
 }

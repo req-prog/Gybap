@@ -7,7 +7,7 @@
 <meta name="description" content="GYBAP — видеохостинг: загружайте видео и короткие ГУБАПЫ, подписывайтесь на авторов, комментируйте.">
 <meta name="theme-color" content="#17a548">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="GYBAP">
@@ -707,9 +707,9 @@ const actions = {
       const p = deferredInstall; deferredInstall = null; p.prompt();
       await p.userChoice.catch(() => {}); renderHeader(); return;
     }
-    const need = ['manifest.webmanifest', 'sw.js', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'], miss = [];
+    const need = ['manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'], miss = [];
     await Promise.all(need.map(async f => { try { const r = await fetch(f, { cache: 'no-store' }); if (!r.ok) miss.push(f); } catch { miss.push(f); } }));
-    const warn = miss.length ? `<div class="err" style="min-height:0">Установка недоступна: на сайте не найдены файлы: ${miss.map(esc).join(', ')}. Загрузите их в ту же папку, где лежит index.html (папку icons целиком), подождите минуту и обновите страницу.</div>` : '';
+    const warn = miss.length ? `<div class="err" style="min-height:0">Установка недоступна: на сайте не найдены файлы: ${miss.map(esc).join(', ')}. Загрузите их в ту же папку, где лежит index.html, подождите минуту и обновите страницу.</div>` : '';
     const how = isIOS
       ? '<li>Откройте сайт в <b>Safari</b>.</li><li>Нажмите кнопку <b>«Поделиться»</b> (квадрат со стрелкой вверх).</li><li>Выберите <b>«На экран “Домой”»</b> и нажмите «Добавить».</li>'
       : '<li>Откройте меню браузера (три точки <b>⋮</b> или <b>≡</b>).</li><li>Выберите <b>«Установить приложение»</b> или <b>«Добавить на главный экран»</b>.</li><li>Подтвердите, и ярлык появится на устройстве.</li>';
