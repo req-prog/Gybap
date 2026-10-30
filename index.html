@@ -146,6 +146,10 @@ td .tt img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;backg
 .toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:80;max-width:90vw}
 .avpick{display:flex;align-items:center;gap:16px}
 
+.vb{width:1.05em;height:1.05em;vertical-align:-.18em;margin-left:4px;fill:var(--accent)}
+.vb path{fill:none;stroke:var(--accent-ink);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.banbar{background:var(--danger);color:#fff;font-weight:700;font-size:12px;padding:4px 10px;border-radius:99px}
+.adm-row{display:flex;gap:6px;flex-wrap:wrap}
 @media (max-width:800px){
   .shell{grid-template-columns:minmax(0,1fr)}
   nav.side{position:fixed;inset:auto 0 0 0;top:auto;height:auto;flex-direction:row;justify-content:space-around;z-index:30;background:var(--surface);
@@ -192,7 +196,9 @@ const GUBAP_MAX_SEC = 180;               // максимум длины ГУБА
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let me = null, authUser = null;
 let myLikes = new Set();
-let soundOn = false;
+let soundOn = false, isAdm = false, myBan = null;
+const chk = p => p?.verified ? '<svg class="vb" viewBox="0 0 24 24" role="img" aria-label="Подтверждённый аккаунт"><circle cx="12" cy="12" r="11"/><path d="M7 12.5l3.3 3.3L17 9"/></svg>' : '';
+const banMsg = b => 'Вы забанены ' + (b.until ? 'до ' + new Date(b.until).toLocaleString('ru') : 'навсегда') + (b.reason ? ': ' + b.reason : '');
 
 /* ============ Утилиты ============ */
 const $ = (s, r = document) => r.querySelector(s);
@@ -230,7 +236,10 @@ async function loadMe() {
   if (authUser) {
     const { data } = await sb.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
     me = data;
-  }
+    isAdm = !!(await sb.rpc('is_admin')).data;
+    const { data: b } = await sb.from('bans').select('*').eq('user_id', authUser.id).maybeSingle();
+    myBan = b && (!b.until || new Date(b.until) > new Date()) ? b : null;
+  } else { isAdm = false; myBan = null; }
   renderHeader();
   if (authUser && !me) openProfile(true);
 }
@@ -259,17 +268,22 @@ function login(mode = 'in') {
       const m = error.message || '';
       err.textContent = /invalid login/i.test(m) ? 'Неверная почта или пароль'
         : /already registered/i.test(m) ? 'Эта почта уже зарегистрирована, нажмите «Уже есть аккаунт»'
+        : /rate limit|too many|security purposes/i.test(m) ? 'Supabase ограничил число писем/попыток. Отключите «Confirm email» и поднимите лимиты в Authentication → Rate Limits'
         : /not confirmed/i.test(m) ? 'Подтвердите почту по письму и войдите снова'
         : m;
       return;
     }
-    if (up && !data.session) { err.textContent = 'Мы отправили письмо — подтвердите почту и войдите.'; return; }
+    if (up && !data.session) {
+      const r = await sb.auth.signInWithPassword({ email, password });
+      if (r.error) { err.textContent = 'Нужно подтвердить почту (или отключите «Confirm email» в Supabase → Authentication → Providers → Email).'; return; }
+    }
     closeModal();
   };
   $('#ago').onclick = go;
   $('#apass').onkeydown = e => { if (e.key === 'Enter') go(); };
 }
 function needLogin() {
+  if (myBan) { toast(banMsg(myBan)); return true; }
   if (me) return false;
   if (authUser) openProfile(true); else { toast('Войдите в аккаунт'); }
   return true;
@@ -279,15 +293,18 @@ function renderHeader() {
   if (!me) {
     h.innerHTML = `<button class="btn" data-act="login">Войти</button>`;
   } else {
-    h.innerHTML = `<button class="btn" data-act="upload">+ Загрузить</button>
+    h.innerHTML = `${myBan ? '<span class="banbar">Бан</span>' : ''}<button class="btn" data-act="upload">+ Загрузить</button>
       <button class="av-btn" data-act="menu" aria-label="Меню профиля" style="background:none;border:0;padding:0">${av(me, 38)}</button>`;
   }
   $('#menuHost').innerHTML = '';
+  $$('[data-nav=admin]').forEach(a => a.remove());
+  if (isAdm) $('#side').insertAdjacentHTML('beforeend', '<a href="#/admin" data-nav="admin"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Админ</span></a>');
 }
 function toggleMenu() {
   const host = $('#menuHost');
   if (host.innerHTML) { host.innerHTML = ''; return; }
-  host.innerHTML = `<div class="menu"><div class="who">@${esc(me.nick)}</div>
+  host.innerHTML = `<div class="menu"><div class="who">@${esc(me.nick)}${chk(me)}</div>
+    ${isAdm ? '<a href="#/admin">Админ-панель</a>' : ''}
     <a href="#/channel/${me.id}">Мой канал</a>
     <a href="#/studio">Мастерская</a>
     <button data-act="editProfile">Изменить ник и аватарку</button>
@@ -337,7 +354,7 @@ function openProfile(first = false) {
 function closeModal() { $('#modalHost').innerHTML = ''; }
 
 /* ============ Данные ============ */
-const SEL = '*, profiles!owner(nick,avatar_url), likes(count), comments(count)';
+const SEL = '*, profiles!owner(nick,avatar_url,verified), likes(count), comments(count)';
 async function fetchVideos({ kind, owner, q, owners, limit = 60 } = {}) {
   let r = sb.from('videos').select(SEL).order('created_at', { ascending: false }).limit(limit);
   if (kind) r = r.eq('kind', kind);
@@ -378,7 +395,7 @@ function card(v) {
     <div class="thumb">${thumb}</div>
     <div class="meta"><a href="#/channel/${v.owner}" onclick="event.stopPropagation()">${av(v.profiles, 36)}</a>
     <div style="min-width:0"><div class="t">${esc(v.title)}</div>
-    <div class="m">${esc(v.profiles?.nick)} · ${num(v.views)} просм. · ${ago(v.created_at)}</div></div></div></a>`;
+    <div class="m">${esc(v.profiles?.nick)}${chk(v.profiles)} · ${num(v.views)} просм. · ${ago(v.created_at)}</div></div></div></a>`;
 }
 function gcard(v) {
   const thumb = v.thumb_url ? `<img src="${esc(v.thumb_url)}" alt="" loading="lazy">` : '';
@@ -423,7 +440,7 @@ async function viewWatch(id) {
     <h1 style="font-size:20px">${esc(v.title)}</h1>
     <div class="actions">
       <div class="row"><a href="#/channel/${v.owner}">${av(v.profiles, 42)}</a>
-        <div><a href="#/channel/${v.owner}"><b>${esc(v.profiles?.nick)}</b></a><div class="muted small" id="subCount">${num(subs)} подписчиков</div></div>
+        <div><a href="#/channel/${v.owner}"><b>${esc(v.profiles?.nick)}</b>${chk(v.profiles)}</a><div class="muted small" id="subCount">${num(subs)} подписчиков</div></div>
         ${me?.id === v.owner ? '' : `<button class="btn sm ${subbed ? 'sub-on' : ''}" data-act="sub" data-id="${v.owner}" id="subBtn">${subbed ? 'Вы подписаны' : 'Подписаться'}</button>`}</div>
       <button class="pill ${liked ? 'on' : ''}" data-act="like" data-id="${v.id}" id="likeBtn">${icon.like}<span id="likeN">${cnt(v.likes)}</span></button>
     </div>
@@ -440,10 +457,10 @@ async function viewWatch(id) {
   } catch (e) { pl.textContent = 'Ошибка: ' + e.message; }
 }
 async function loadComments(v) {
-  const { data } = await sb.from('comments').select('*, profiles!user_id(nick,avatar_url)').eq('video_id', v.id).order('created_at', { ascending: false }).limit(200);
+  const { data } = await sb.from('comments').select('*, profiles!user_id(nick,avatar_url,verified)').eq('video_id', v.id).order('created_at', { ascending: false }).limit(200);
   $('#cN').textContent = (data || []).length;
   $('#clist').innerHTML = (data || []).map(c => `<div class="comment">${av(c.profiles, 36)}<div style="flex:1;min-width:0">
-    <div class="small"><b>@${esc(c.profiles?.nick)}</b> <span class="muted">${ago(c.created_at)}</span></div><p>${esc(c.body)}</p></div>
+    <div class="small"><b>@${esc(c.profiles?.nick)}</b>${chk(c.profiles)} <span class="muted">${ago(c.created_at)}</span></div><p>${esc(c.body)}</p></div>
     ${me && (me.id === c.user_id || me.id === v.owner) ? `<button class="btn danger sm" data-act="delComment" data-id="${c.id}" data-v="${v.id}">Удалить</button>` : ''}</div>`).join('') || '<p class="muted">Комментариев пока нет.</p>';
 }
 
@@ -454,7 +471,7 @@ async function viewGubaps(startId) {
   if (!list.length) { app.innerHTML = '<div class="empty">ГУБАПОВ пока нет. Загрузите первый короткий ролик!</div>'; return; }
   app.innerHTML = `<div class="reels" id="reels">${list.map(v => `<div class="reel" data-id="${v.id}">
     <video playsinline loop muted preload="none" ${v.thumb_url ? `poster="${esc(v.thumb_url)}"` : ''}></video>
-    <div class="cap"><b>@${esc(v.profiles?.nick)}</b><span>${esc(v.title)}</span></div>
+    <div class="cap"><b>@${esc(v.profiles?.nick)}${chk(v.profiles)}</b><span>${esc(v.title)}</span></div>
     <div class="side">
       <a href="#/channel/${v.owner}">${av(v.profiles, 46)}</a>
       <button class="rb ${myLikes.has(v.id) ? 'on' : ''}" data-act="like" data-id="${v.id}" aria-label="Нравится">${icon.like}</button><div class="rc" data-ln="${v.id}">${cnt(v.likes)}</div>
@@ -486,7 +503,7 @@ async function viewChannel(id) {
     me ? sb.from('subscriptions').select('channel_id').eq('subscriber_id', me.id).eq('channel_id', id).maybeSingle() : { data: null }
   ]);
   const subbed = !!subRow.data, videos = vids.filter(v => v.kind === 'video'), gubs = vids.filter(v => v.kind === 'gubap');
-  app.innerHTML = `<div class="chead">${av(p, 84)}<div style="flex:1;min-width:200px"><h1>@${esc(p.nick)}</h1>
+  app.innerHTML = `<div class="chead">${av(p, 84)}<div style="flex:1;min-width:200px"><h1>@${esc(p.nick)}${chk(p)}</h1>
     <div class="muted">${num(subs)} подписчиков · ${vids.length} роликов</div></div>
     ${me?.id === id ? '<a class="btn ghost" href="#/studio">Мастерская</a>' : `<button class="btn ${subbed ? 'sub-on' : ''}" data-act="sub" data-id="${id}" id="subBtn" data-reload="1">${subbed ? 'Вы подписаны' : 'Подписаться'}</button>`}</div>
     ${gubs.length ? `<h2 style="margin-top:20px">ГУБАПЫ</h2><div class="shelf">${gubs.map(gcard).join('')}</div>` : ''}
@@ -501,7 +518,7 @@ async function viewStudio() {
   const vids = await fetchVideos({ owner: me.id, limit: 200 });
   const ids = vids.map(v => v.id);
   const [{ data: coms }, { data: subs }] = await Promise.all([
-    ids.length ? sb.from('comments').select('*, profiles!user_id(nick,avatar_url), videos(title)').in('video_id', ids).order('created_at', { ascending: false }).limit(200) : { data: [] },
+    ids.length ? sb.from('comments').select('*, profiles!user_id(nick,avatar_url,verified), videos(title)').in('video_id', ids).order('created_at', { ascending: false }).limit(200) : { data: [] },
     sb.from('subscriptions').select('created_at, profiles!subscriptions_subscriber_id_fkey(nick,avatar_url,id)').eq('channel_id', me.id).order('created_at', { ascending: false }).limit(200)
   ]);
   const totals = { views: vids.reduce((a, v) => a + v.views, 0), likes: vids.reduce((a, v) => a + cnt(v.likes), 0), comments: (coms || []).length, subs: (subs || []).length };
@@ -515,7 +532,7 @@ async function viewStudio() {
       <h2 style="margin-top:24px">Лучшие ролики</h2>${table([...vids].sort((a, b) => b.views - a.views).slice(0, 5))}`,
     videos: () => `<div class="row" style="justify-content:space-between;margin-top:16px"><h2>Все ролики</h2><button class="btn" data-act="upload">+ Загрузить</button></div>${table(vids, true)}`,
     comments: () => (coms || []).length ? `<div style="margin-top:12px">${coms.map(c => `<div class="comment">${av(c.profiles, 36)}<div style="flex:1;min-width:0">
-      <div class="small"><b>@${esc(c.profiles?.nick)}</b> <span class="muted">· ${esc(c.videos?.title)} · ${ago(c.created_at)}</span></div><p>${esc(c.body)}</p></div>
+      <div class="small"><b>@${esc(c.profiles?.nick)}</b>${chk(c.profiles)} <span class="muted">· ${esc(c.videos?.title)} · ${ago(c.created_at)}</span></div><p>${esc(c.body)}</p></div>
       <button class="btn danger sm" data-act="delComment" data-id="${c.id}" data-studio="1">Удалить</button></div>`).join('')}</div>` : '<div class="empty">Комментариев пока нет.</div>',
     subs: () => (subs || []).length ? `<div class="tw"><table><thead><tr><th>Подписчик</th><th>Дата</th></tr></thead><tbody>${subs.map(s => `<tr><td><a class="tt" href="#/channel/${s.profiles?.id}">${av(s.profiles, 32)}<b>@${esc(s.profiles?.nick)}</b></a></td><td class="muted">${ago(s.created_at)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Подписчиков пока нет.</div>'
   };
@@ -660,6 +677,83 @@ const actions = {
     toast('Ролик удалён'); viewStudio();
   }
 };
+
+/* ============ Админ-панель ============ */
+let admTab = 'stats', admQ = '';
+const DUR = [['1 час', 1], ['6 часов', 6], ['1 день', 24], ['3 дня', 72], ['7 дней', 168], ['30 дней', 720], ['Навсегда', 0]];
+async function viewAdmin() {
+  if (!isAdm) { app.innerHTML = '<div class="empty">Нет доступа.</div>'; return; }
+  app.innerHTML = '<p class="muted">Загрузка…</p>';
+  const tabs = [['stats', 'Обзор'], ['users', 'Пользователи'], ['videos', 'Видео'], ['comments', 'Комментарии'], ['bans', 'Баны']];
+  const { data: bans } = await sb.from('bans').select('*');
+  const bm = new Map((bans || []).map(b => [b.user_id, b])), live = b => b && (!b.until || new Date(b.until) > new Date());
+  const st = b => !b ? '' : live(b) ? `<span class="tag" style="background:var(--danger);color:#fff">бан ${b.until ? 'до ' + new Date(b.until).toLocaleString('ru') : 'навсегда'}</span>` : '<span class="muted small">бан истёк</span>';
+  let body = '';
+  if (admTab === 'stats') {
+    const c = await Promise.all(['profiles', 'videos', 'comments', 'likes'].map(t => sb.from(t).select('*', { count: 'exact', head: true })));
+    const act = (bans || []).filter(live).length;
+    body = `<div class="stats">${['Пользователи', 'Видео', 'Комментарии', 'Лайки'].map((n, i) => `<div class="stat"><b>${num(c[i].count)}</b><span>${n}</span></div>`).join('')}<div class="stat"><b>${act}</b><span>Активных банов</span></div></div>`;
+  } else if (admTab === 'users') {
+    let r = sb.from('profiles').select('*').order('created_at', { ascending: false }).limit(200);
+    if (admQ) r = r.ilike('nick', `%${admQ.replace(/[%_]/g, '')}%`);
+    const { data } = await r;
+    body = `<form class="row" id="admSearch" style="margin-top:14px"><input id="admq" type="search" placeholder="Поиск по нику" value="${esc(admQ)}" style="flex:1;border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:999px"><button class="btn">Найти</button></form>
+      <div class="tw"><table><thead><tr><th>Пользователь</th><th>Статус</th><th>Действия</th></tr></thead><tbody>${(data || []).map(u => `<tr><td><a class="tt" href="#/channel/${u.id}">${av(u, 32)}<b>@${esc(u.nick)}${chk(u)}</b></a></td><td>${st(bm.get(u.id))}</td>
+      <td><div class="adm-row">${u.id === me.id ? '<span class="muted small">это вы</span>' : `${live(bm.get(u.id)) ? `<button class="btn ghost sm" data-act="admUnban" data-id="${u.id}">Разбанить</button>` : `<button class="btn danger sm" data-act="admBan" data-id="${u.id}" data-n="${esc(u.nick)}">Забанить</button>`}
+      <button class="btn ghost sm" data-act="admVerify" data-id="${u.id}" data-v="${u.verified ? 1 : ''}">${u.verified ? 'Снять галочку' : 'Дать галочку'}</button>
+      <button class="btn danger sm" data-act="admClear" data-id="${u.id}">Стереть комменты</button>`}</div></td></tr>`).join('')}</tbody></table></div>`;
+  } else if (admTab === 'videos') {
+    const vids = await fetchVideos({ limit: 200 });
+    body = vids.length ? `<div class="tw"><table><thead><tr><th>Ролик</th><th>Автор</th><th>Просм.</th><th></th></tr></thead><tbody>${vids.map(v => `<tr><td><a class="tt" href="#/watch/${v.id}"><b>${esc(v.title)}</b> <span class="tag">${v.kind === 'gubap' ? 'ГУБАП' : 'Видео'}</span></a></td><td>@${esc(v.profiles?.nick)}</td><td>${num(v.views)}</td>
+      <td><button class="btn danger sm" data-act="admDelVideo" data-id="${v.id}">Удалить</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Видео нет.</div>';
+  } else if (admTab === 'comments') {
+    const { data } = await sb.from('comments').select('*, profiles!user_id(nick,avatar_url,verified), videos(title)').order('created_at', { ascending: false }).limit(200);
+    body = (data || []).length ? `<div style="margin-top:12px">${data.map(c => `<div class="comment">${av(c.profiles, 36)}<div style="flex:1;min-width:0"><div class="small"><b>@${esc(c.profiles?.nick)}</b>${chk(c.profiles)} <span class="muted">· ${esc(c.videos?.title)} · ${ago(c.created_at)}</span></div><p>${esc(c.body)}</p></div>
+      <button class="btn danger sm" data-act="admDelComment" data-id="${c.id}">Удалить</button></div>`).join('')}</div>` : '<div class="empty">Комментариев нет.</div>';
+  } else {
+    const ids = (bans || []).map(b => b.user_id);
+    const { data: ps } = ids.length ? await sb.from('profiles').select('*').in('id', ids) : { data: [] };
+    const pm = new Map((ps || []).map(p => [p.id, p]));
+    body = (bans || []).length ? `<div class="tw"><table><thead><tr><th>Пользователь</th><th>Срок</th><th>Причина</th><th></th></tr></thead><tbody>${bans.map(b => `<tr><td>@${esc(pm.get(b.user_id)?.nick)}</td><td>${st(b)}</td><td>${esc(b.reason)}</td>
+      <td><button class="btn ghost sm" data-act="admUnban" data-id="${b.user_id}">Разбанить</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Банов нет.</div>';
+  }
+  app.innerHTML = `<h1>Админ-панель</h1><div class="tabs" role="tablist">${tabs.map(([k, n]) => `<button class="${admTab === k ? 'on' : ''}" data-act="admTab" data-id="${k}" role="tab">${n}</button>`).join('')}</div><div>${body}</div>`;
+  const f = $('#admSearch'); if (f) f.onsubmit = e => { e.preventDefault(); admQ = $('#admq').value.trim(); viewAdmin(); };
+}
+const admDone = (t) => { toast(t); viewAdmin(); };
+const admErr = r => r.error && (toast(r.error.message), true);
+Object.assign(actions, {
+  admTab(el) { admTab = el.dataset.id; viewAdmin(); },
+  admBan(el) {
+    $('#modalHost').innerHTML = `<div class="back"><div class="modal" role="dialog"><h2>Бан @${esc(el.dataset.n)}</h2>
+      <label>На сколько<select id="bdur">${DUR.map(([n, h]) => `<option value="${h}">${n}</option>`).join('')}<option value="x">Свой срок (в часах)…</option></select></label>
+      <label id="bcw" hidden>Часов<input id="bcustom" type="number" min="1" value="12"></label>
+      <label>Причина (увидит пользователь)<textarea id="breason" rows="2" maxlength="300"></textarea></label>
+      <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-act="closeModal">Отмена</button><button class="btn danger" id="bgo">Забанить</button></div></div></div>`;
+    $('#bdur').onchange = e => $('#bcw').hidden = e.target.value !== 'x';
+    $('#bgo').onclick = async () => {
+      let h = $('#bdur').value; h = h === 'x' ? Math.max(1, +$('#bcustom').value || 1) : +h;
+      const until = h ? new Date(Date.now() + h * 3600e3).toISOString() : null;
+      const r = await sb.from('bans').upsert({ user_id: el.dataset.id, until, reason: $('#breason').value.trim(), banned_by: me.id });
+      if (admErr(r)) return; closeModal(); admDone('Пользователь забанен');
+    };
+  },
+  async admUnban(el) { if (admErr(await sb.from('bans').delete().eq('user_id', el.dataset.id))) return; admDone('Разбанен'); },
+  async admVerify(el) { if (admErr(await sb.from('profiles').update({ verified: !el.dataset.v }).eq('id', el.dataset.id))) return; admDone('Готово'); },
+  async admClear(el) {
+    if (el.dataset.sure !== '1') { el.dataset.sure = '1'; el.textContent = 'Точно?'; setTimeout(() => { el.dataset.sure = ''; el.textContent = 'Стереть комменты'; }, 4000); return; }
+    if (admErr(await sb.rpc('admin_clear_user_comments', { uid: el.dataset.id }))) return; admDone('Комментарии удалены');
+  },
+  async admDelComment(el) { if (admErr(await sb.from('comments').delete().eq('id', el.dataset.id))) return; admDone('Комментарий удалён'); },
+  async admDelVideo(el) {
+    if (el.dataset.sure !== '1') { el.dataset.sure = '1'; el.textContent = 'Точно удалить?'; setTimeout(() => { el.dataset.sure = ''; el.textContent = 'Удалить'; }, 4000); return; }
+    const { data: v } = await sb.from('videos').select('*').eq('id', el.dataset.id).single();
+    if (!v) return;
+    await sb.storage.from('videos').remove(Array.from({ length: v.parts }, (_, i) => partPath(v, i)));
+    await sb.storage.from('images').remove([`${v.owner}/${v.id}.jpg`]);
+    if (admErr(await sb.rpc('admin_delete_video', { vid: v.id }))) return; admDone('Видео удалено');
+  }
+});
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) { if (!e.target.closest('.menu')) $('#menuHost').innerHTML = ''; return; }
@@ -672,13 +766,14 @@ function route() {
   if (cleanup) { cleanup(); cleanup = null; }
   $$('video').forEach(v => v.pause());
   const [, page = '', arg = ''] = (location.hash || '#/').slice(1).split('/');
-  const nav = { '': 'home', search: 'home', gubaps: 'gubaps', subs: 'subs', studio: 'studio', channel: 'studio' }[page];
+  const nav = { '': 'home', search: 'home', gubaps: 'gubaps', subs: 'subs', studio: 'studio', channel: 'studio', admin: 'admin' }[page];
   $$('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === nav && !(page === 'channel')));
   window.scrollTo(0, 0);
   if (page === 'watch') viewWatch(arg);
   else if (page === 'gubaps') viewGubaps(arg);
   else if (page === 'channel') viewChannel(arg);
   else if (page === 'studio') viewStudio();
+  else if (page === 'admin') viewAdmin();
   else if (page === 'subs') viewSubs();
   else if (page === 'search') viewHome(decodeURIComponent(arg));
   else viewHome();
