@@ -9,7 +9,7 @@
 <meta property="og:title" content="GYBAP — видео и ГУБАПЫ">
 <meta property="og:description" content="Видеохостинг с короткими вертикальными роликами.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2317a548'/%3E%3Cpath d='M12 9l11 7-11 7z' fill='white'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='9'%20fill='%2317a548'/%3E%3Cpath%20d='M22.6%2010.6A8.6%208.6%200%201%200%2024.6%2016H18.6'%20fill='none'%20stroke='%23fff'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Cpath%20d='M12.2%2012.6v6.8L18%2016z'%20fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Unbounded:wght@500;700;900&display=swap" rel="stylesheet">
@@ -43,6 +43,7 @@ header{position:sticky;top:0;z-index:20;height:var(--hh);display:flex;align-item
   padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));
   background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .logo{font:900 22px var(--f-display);letter-spacing:-.02em;color:var(--accent);display:flex;align-items:center;gap:8px}
+.logo svg{width:30px;height:30px;flex:none}
 .logo i{width:26px;height:26px;border-radius:8px;background:var(--accent);display:grid;place-items:center}
 .logo i::after{content:"";border-left:9px solid var(--accent-ink);border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:2px}
 .search{flex:1;max-width:520px;margin-inline:auto;display:flex}
@@ -156,6 +157,14 @@ td .tt img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;backg
 .vb path{fill:none;stroke:var(--accent-ink);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 .banbar{background:var(--danger);color:#fff;font-weight:700;font-size:12px;padding:4px 10px;border-radius:99px}
 .adm-row{display:flex;gap:6px;flex-wrap:wrap}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:40;height:50dvh;max-width:560px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;animation:sheetUp .22s ease-out}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+.sheet .sh{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.sheet .x{width:34px;height:34px;border-radius:50%;border:0;background:var(--surface2);display:grid;place-items:center}
+.sheet .sb{flex:1;overflow-y:auto;padding:0 16px;overscroll-behavior:contain}
+.sheet .sf{margin:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);align-items:center}
+.sheet .comment:first-child{border-top:0}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
 @media (max-width:800px){
   .shell{grid-template-columns:minmax(0,1fr)}
   nav.side{position:fixed;inset:auto 0 0 0;top:auto;height:auto;flex-direction:row;justify-content:space-around;z-index:30;background:var(--surface);
@@ -172,7 +181,7 @@ td .tt img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;backg
 </head>
 <body>
 <header>
-  <a class="logo" href="#/" aria-label="GYBAP"><i></i><span>GYBAP</span></a>
+  <a class="logo" href="#/" aria-label="GYBAP"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4ee88a"/><stop offset="1" stop-color="#0d8a37"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lgg)"/><path d="M22.6 10.6A8.6 8.6 0 1 0 24.6 16H18.6" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.2 12.6v6.8L18 16z" fill="#fff"/></svg><span>GYBAP</span></a>
   <form class="search" id="searchForm">
     <input id="q" type="search" placeholder="Поиск видео" autocomplete="off">
     <button type="submit" aria-label="Найти">Найти</button>
@@ -190,6 +199,7 @@ td .tt img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;backg
   <main id="app"></main>
 </div>
 <div id="modalHost"></div>
+<div id="sheetHost"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -383,9 +393,10 @@ function closeModal() { $('#modalHost').innerHTML = ''; }
 
 /* ============ Данные ============ */
 const SEL = '*, profiles!owner(nick,avatar_url,verified), likes(count), comments(count)';
-async function fetchVideos({ kind, owner, q, owners, limit = 60 } = {}) {
+async function fetchVideos({ kind, owner, q, owners, featured, limit = 60 } = {}) {
   let r = sb.from('videos').select(SEL).order('created_at', { ascending: false }).limit(limit);
   if (kind) r = r.eq('kind', kind);
+  if (featured) r = r.not('featured_at', 'is', null).order('featured_at', { ascending: false });
   if (owner) r = r.eq('owner', owner);
   if (owners) r = r.in('owner', owners);
   if (q) r = r.ilike('title', `%${q.replace(/[%_]/g, '')}%`);
@@ -437,8 +448,9 @@ let cleanup = null;
 
 async function viewHome(q) {
   app.innerHTML = '<p class="muted">Загрузка…</p>';
-  const [vids, gubs] = await Promise.all([fetchVideos({ kind: 'video', q }), q ? [] : fetchVideos({ kind: 'gubap', limit: 14 })]);
+  const [vids, gubs, feat] = await Promise.all([fetchVideos({ kind: 'video', q }), q ? [] : fetchVideos({ kind: 'gubap', limit: 14 }), q ? [] : fetchVideos({ featured: true, limit: 4 })]);
   app.innerHTML = `${q ? `<h1>Результаты: «${esc(q)}»</h1>` : ''}
+    ${feat.length ? `<h2>Выбор редакции</h2><div class="grid" style="margin-bottom:22px">${feat.map(v => v.kind === 'gubap' ? gcard(v) : card(v)).join('')}</div>` : ''}
     ${gubs.length ? `<div class="row" style="justify-content:space-between"><h2>ГУБАПЫ</h2><a class="muted small" href="#/gubaps">Смотреть все →</a></div><div class="shelf">${gubs.map(gcard).join('')}</div>` : ''}
     ${!q ? '<h2 style="margin-top:14px">Новые видео</h2>' : ''}
     ${vids.length ? `<div class="grid">${vids.map(card).join('')}</div>` : `<div class="empty">${q ? 'Ничего не найдено.' : 'Пока нет видео. Загрузите первое!'}</div>`}`;
@@ -487,9 +499,10 @@ async function viewWatch(id) {
 async function loadComments(v) {
   const { data } = await sb.from('comments').select('*, profiles!user_id(nick,avatar_url,verified)').eq('video_id', v.id).order('created_at', { ascending: false }).limit(200);
   $('#cN').textContent = (data || []).length;
+  const rcn = $(`[data-cn="${v.id}"]`); if (rcn) rcn.textContent = (data || []).length;
   $('#clist').innerHTML = (data || []).map(c => `<div class="comment">${av(c.profiles, 36)}<div style="flex:1;min-width:0">
     <div class="small"><b>@${esc(c.profiles?.nick)}</b>${chk(c.profiles)} <span class="muted">${ago(c.created_at)}</span></div><p>${esc(c.body)}</p></div>
-    ${me && (me.id === c.user_id || me.id === v.owner) ? `<button class="btn danger sm" data-act="delComment" data-id="${c.id}" data-v="${v.id}">Удалить</button>` : ''}</div>`).join('') || '<p class="muted">Комментариев пока нет.</p>';
+    ${me && (me.id === c.user_id || me.id === v.owner || isAdm) ? `<button class="btn danger sm" data-act="delComment" data-id="${c.id}" data-v="${v.id}">Удалить</button>` : ''}</div>`).join('') || '<p class="muted">Комментариев пока нет.</p>';
 }
 
 async function viewGubaps(startId) {
@@ -503,7 +516,7 @@ async function viewGubaps(startId) {
     <div class="side">
       <a href="#/channel/${v.owner}">${av(v.profiles, 46)}</a>
       <button class="rb ${myLikes.has(v.id) ? 'on' : ''}" data-act="like" data-id="${v.id}" aria-label="Нравится">${icon.like}</button><div class="rc" data-ln="${v.id}">${cnt(v.likes)}</div>
-      <a class="rb" href="#/watch/${v.id}" aria-label="Комментарии">${icon.chat}</a><div class="rc">${cnt(v.comments)}</div>
+      <button class="rb" data-act="gcom" data-id="${v.id}" aria-label="Комментарии">${icon.chat}</button><div class="rc" data-cn="${v.id}">${cnt(v.comments)}</div>
       <button class="rb" data-act="sound" aria-label="Звук">${icon.sound}</button>
     </div></div>`).join('')}</div>`;
   const map = new Map(list.map(v => [v.id, v]));
@@ -657,6 +670,18 @@ const actions = {
   login: () => login('in'), upload: openUpload, menu: toggleMenu, closeModal,
   editProfile() { $('#menuHost').innerHTML = ''; openProfile(false); },
   async logout() { await sb.auth.signOut(); me = null; authUser = null; renderHeader(); location.hash = '#/'; route(); },
+  closeSheet() { $('#sheetHost').innerHTML = ''; },
+  async gcom(el) {
+    const id = el.dataset.id;
+    $('#sheetHost').innerHTML = `<div class="sheet" role="dialog" aria-label="Комментарии">
+      <div class="sh"><h3>Комментарии <span class="muted" id="cN"></span></h3>
+        <button class="x" data-act="closeSheet" aria-label="Закрыть"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="sb" id="clist"><p class="muted">Загрузка…</p></div>
+      <div class="cform sf">${me ? av(me, 34) : ''}<textarea id="ctext" maxlength="1000" rows="1" placeholder="${me ? 'Напишите комментарий' : 'Войдите, чтобы комментировать'}" ${me ? '' : 'disabled'}></textarea>
+        <button class="btn" data-act="comment" data-id="${id}">Отправить</button></div></div>`;
+    const { data: v } = await sb.from('videos').select('id,owner').eq('id', id).single();
+    if (v) loadComments(v);
+  },
   tab(el) { studioTab = el.dataset.id; viewStudio(); },
   sound() { soundOn = !soundOn; $$('.reel video').forEach(v => v.muted = !soundOn); toast(soundOn ? 'Звук включён' : 'Звук выключен'); },
   async like(el) {
@@ -721,39 +746,48 @@ async function viewAdmin() {
   const st = b => !b ? '' : live(b) ? `<span class="tag" style="background:var(--danger);color:#fff">бан ${b.until ? 'до ' + new Date(b.until).toLocaleString('ru') : 'навсегда'}</span>` : '<span class="muted small">бан истёк</span>';
   let body = '';
   if (admTab === 'stats') {
-    const c = await Promise.all(['profiles', 'videos', 'comments', 'likes'].map(t => sb.from(t).select('*', { count: 'exact', head: true })));
-    const act = (bans || []).filter(live).length;
-    body = `<div class="stats">${['Пользователи', 'Видео', 'Комментарии', 'Лайки'].map((n, i) => `<div class="stat"><b>${num(c[i].count)}</b><span>${n}</span></div>`).join('')}<div class="stat"><b>${act}</b><span>Активных банов</span></div></div>`;
+    const { data: x } = await sb.rpc('admin_stats'); const s = x || {};
+    const items = [['Пользователи', s.users], ['Новых за 7 дней', s.users_7d], ['Видео', s.videos], ['Новых видео за 7 дней', s.videos_7d], ['Просмотры', s.views], ['Лайки', s.likes], ['Комментарии', s.comments], ['Подписки', s.subs], ['Активных банов', s.bans]];
+    body = `<div class="stats">${items.map(([n, v]) => `<div class="stat"><b>${num(v)}</b><span>${n}</span></div>`).join('')}</div>`;
   } else if (admTab === 'users') {
-    let r = sb.from('profiles').select('*').order('created_at', { ascending: false }).limit(200);
-    if (admQ) r = r.ilike('nick', `%${admQ.replace(/[%_]/g, '')}%`);
-    const { data } = await r;
-    body = `<form class="row" id="admSearch" style="margin-top:14px"><input id="admq" type="search" placeholder="Поиск по нику" value="${esc(admQ)}" style="flex:1;border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:999px"><button class="btn">Найти</button></form>
-      <div class="tw"><table><thead><tr><th>Пользователь</th><th>Статус</th><th>Действия</th></tr></thead><tbody>${(data || []).map(u => `<tr><td><a class="tt" href="#/channel/${u.id}">${av(u, 32)}<b>@${esc(u.nick)}${chk(u)}</b></a></td><td>${st(bm.get(u.id))}</td>
-      <td><div class="adm-row">${u.id === me.id ? '<span class="muted small">это вы</span>' : `${live(bm.get(u.id)) ? `<button class="btn ghost sm" data-act="admUnban" data-id="${u.id}">Разбанить</button>` : `<button class="btn danger sm" data-act="admBan" data-id="${u.id}" data-n="${esc(u.nick)}">Забанить</button>`}
-      <button class="btn ghost sm" data-act="admVerify" data-id="${u.id}" data-v="${u.verified ? 1 : ''}">${u.verified ? 'Снять галочку' : 'Дать галочку'}</button>
-      <button class="btn danger sm" data-act="admClear" data-id="${u.id}">Стереть комменты</button>`}</div></td></tr>`).join('')}</tbody></table></div>`;
+    const { data } = await sb.rpc('admin_list_users', { q: admQ });
+    body = `<form class="row" id="admSearch" style="margin-top:14px"><input id="admq" type="search" placeholder="Поиск по нику или почте" value="${esc(admQ)}" style="flex:1;border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:999px"><button class="btn">Найти</button></form>
+      <div class="tw"><table><thead><tr><th>Пользователь</th><th>Почта</th><th>Статус</th><th>Действия</th></tr></thead><tbody>${(data || []).map(u => `<tr>
+      <td>${u.has_profile ? `<a class="tt" href="#/channel/${u.id}">${av(u, 32)}<b>@${esc(u.nick)}${chk(u)}</b></a>` : '<span class="muted">без профиля</span>'}</td><td class="muted small">${esc(u.email)}</td><td>${st(bm.get(u.id))}</td>
+      <td><div class="adm-row">${u.id === me.id ? '<span class="muted small">это вы</span>' : `${live(bm.get(u.id)) ? `<button class="btn ghost sm" data-act="admUnban" data-id="${u.id}">Разбанить</button>` : `<button class="btn danger sm" data-act="admBan" data-id="${u.id}" data-n="${esc(u.nick || u.email)}">Забанить</button>`}
+      ${u.has_profile ? `<button class="btn ghost sm" data-act="admVerify" data-id="${u.id}" data-v="${u.verified ? 1 : ''}">${u.verified ? 'Снять галочку' : 'Дать галочку'}</button>
+      <button class="btn danger sm" data-act="admClear" data-id="${u.id}">Стереть комменты</button>` : ''}`}</div></td></tr>`).join('')}</tbody></table></div>`;
   } else if (admTab === 'videos') {
     const vids = await fetchVideos({ limit: 200 });
     body = vids.length ? `<div class="tw"><table><thead><tr><th>Ролик</th><th>Автор</th><th>Просм.</th><th></th></tr></thead><tbody>${vids.map(v => `<tr><td><a class="tt" href="#/watch/${v.id}"><b>${esc(v.title)}</b> <span class="tag">${v.kind === 'gubap' ? 'ГУБАП' : 'Видео'}</span></a></td><td>@${esc(v.profiles?.nick)}</td><td>${num(v.views)}</td>
-      <td><button class="btn danger sm" data-act="admDelVideo" data-id="${v.id}">Удалить</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Видео нет.</div>';
+      <td><div class="adm-row"><button class="btn ghost sm" data-act="admFeature" data-id="${v.id}" data-f="${v.featured_at ? 1 : ''}">${v.featured_at ? 'Снять с главной' : 'На главную'}</button><button class="btn danger sm" data-act="admDelVideo" data-id="${v.id}">Удалить</button></div></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Видео нет.</div>';
   } else if (admTab === 'comments') {
     const { data } = await sb.from('comments').select('*, profiles!user_id(nick,avatar_url,verified), videos(title)').order('created_at', { ascending: false }).limit(200);
     body = (data || []).length ? `<div style="margin-top:12px">${data.map(c => `<div class="comment">${av(c.profiles, 36)}<div style="flex:1;min-width:0"><div class="small"><b>@${esc(c.profiles?.nick)}</b>${chk(c.profiles)} <span class="muted">· ${esc(c.videos?.title)} · ${ago(c.created_at)}</span></div><p>${esc(c.body)}</p></div>
       <button class="btn danger sm" data-act="admDelComment" data-id="${c.id}">Удалить</button></div>`).join('')}</div>` : '<div class="empty">Комментариев нет.</div>';
   } else {
-    const ids = (bans || []).map(b => b.user_id);
-    const { data: ps } = ids.length ? await sb.from('profiles').select('*').in('id', ids) : { data: [] };
-    const pm = new Map((ps || []).map(p => [p.id, p]));
-    body = (bans || []).length ? `<div class="tw"><table><thead><tr><th>Пользователь</th><th>Срок</th><th>Причина</th><th></th></tr></thead><tbody>${bans.map(b => `<tr><td>@${esc(pm.get(b.user_id)?.nick)}</td><td>${st(b)}</td><td>${esc(b.reason)}</td>
-      <td><button class="btn ghost sm" data-act="admUnban" data-id="${b.user_id}">Разбанить</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Банов нет.</div>';
+    const { data: lb } = await sb.rpc('admin_list_bans'); const rows = lb || [];
+    body = `<form class="row wrap" id="ebForm" style="margin-top:14px"><input id="ebEmail" type="email" required placeholder="Почта (даже если не зарегистрирован)" style="flex:1;min-width:220px;border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:999px">
+      <select id="ebDur" style="border:1px solid var(--line);background:var(--surface);padding:9px 12px;border-radius:999px">${DUR.map(([n, h]) => `<option value="${h}">${n}</option>`).join('')}</select>
+      <input id="ebWhy" maxlength="300" placeholder="Причина" style="flex:1;min-width:140px;border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:999px"><button class="btn danger">Забанить по почте</button></form>
+      <p class="muted small">Если человека ещё нет на сайте, бан сработает сразу при его регистрации с этой почтой.</p>
+      ${rows.length ? `<div class="tw"><table><thead><tr><th>Кто</th><th>Срок</th><th>Причина</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td>${r.kind === 'user' ? `<b>@${esc(r.nick || '—')}</b> <span class="muted small">${esc(r.email)}</span>` : `<span class="muted small">${esc(r.email)}</span> <span class="tag">ждёт регистрации</span>`}</td><td>${st(r)}</td><td>${esc(r.reason)}</td>
+      <td><button class="btn ghost sm" data-act="${r.kind === 'user' ? 'admUnban' : 'admUnbanEmail'}" data-id="${r.user_id || ''}" data-e="${esc(r.email)}">Разбанить</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Банов нет.</div>'}`;
   }
   app.innerHTML = `<h1>Админ-панель</h1><div class="tabs" role="tablist">${tabs.map(([k, n]) => `<button class="${admTab === k ? 'on' : ''}" data-act="admTab" data-id="${k}" role="tab">${n}</button>`).join('')}</div><div>${body}</div>`;
+  const eb = $('#ebForm');
+  if (eb) eb.onsubmit = async e => {
+    e.preventDefault();
+    const r = await sb.rpc('admin_ban_email', { em: $('#ebEmail').value, hrs: +$('#ebDur').value, why: $('#ebWhy').value.trim() });
+    if (admErr(r)) return; admDone(r.data === 'user' ? 'Пользователь забанен' : 'Почта в бане: сработает при регистрации');
+  };
   const f = $('#admSearch'); if (f) f.onsubmit = e => { e.preventDefault(); admQ = $('#admq').value.trim(); viewAdmin(); };
 }
 const admDone = (t) => { toast(t); viewAdmin(); };
 const admErr = r => r.error && (toast(r.error.message), true);
 Object.assign(actions, {
+  async admUnbanEmail(el) { if (admErr(await sb.rpc('admin_unban_email', { em: el.dataset.e }))) return; admDone('Разбанен'); },
+  async admFeature(el) { if (admErr(await sb.from('videos').update({ featured_at: el.dataset.f ? null : new Date().toISOString() }).eq('id', el.dataset.id))) return; admDone(el.dataset.f ? 'Снято с главной' : 'Показывается на главной'); },
   admTab(el) { admTab = el.dataset.id; viewAdmin(); },
   admBan(el) {
     $('#modalHost').innerHTML = `<div class="back"><div class="modal" role="dialog"><h2>Бан @${esc(el.dataset.n)}</h2>
@@ -785,6 +819,7 @@ Object.assign(actions, {
     if (admErr(await sb.rpc('admin_delete_video', { vid: v.id }))) return; admDone('Видео удалено');
   }
 });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#sheetHost').innerHTML = ''; });
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) { if (!e.target.closest('.menu')) $('#menuHost').innerHTML = ''; return; }
@@ -794,6 +829,7 @@ $('#searchForm').onsubmit = e => { e.preventDefault(); const q = $('#q').value.t
 
 /* ============ Маршрутизация ============ */
 function route() {
+  $('#sheetHost').innerHTML = '';
   if (cleanup) { cleanup(); cleanup = null; }
   $$('video').forEach(v => v.pause());
   const [, page = '', arg = ''] = (location.hash || '#/').slice(1).split('/');
