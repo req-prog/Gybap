@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GYBAP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Unbounded:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* Раскладка: шапка сверху, меню слева (снизу на телефоне), контент справа. Тема: зелёная. */
+:root{
+  --bg:#f1f7ef; --surface:#ffffff; --surface2:#e3efe0; --line:#cfe1ca;
+  --ink:#0e2615; --muted:#5b7562; --accent:#17a548; --accent-ink:#ffffff; --accent-soft:#d3f0dc;
+  --danger:#c0392b;
+  --f-display:'Unbounded','Arial Black',sans-serif;
+  --f-body:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --hh:60px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#07130b; --surface:#0e2014; --surface2:#16301f; --line:#1f3b29;
+  --ink:#e6f6ea; --muted:#8fae98; --accent:#3ddc7a; --accent-ink:#04200f; --accent-soft:#12361f; --danger:#ff7a6b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#07130b; --surface:#0e2014; --surface2:#16301f; --line:#1f3b29;
+  --ink:#e6f6ea; --muted:#8fae98; --accent:#3ddc7a; --accent-ink:#04200f; --accent-soft:#12361f; --danger:#ff7a6b; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:500 15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+img{max-width:100%;display:block}
+
+/* Шапка */
+header{position:sticky;top:0;z-index:20;height:var(--hh);display:flex;align-items:center;gap:14px;
+  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));
+  background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.logo{font:900 22px var(--f-display);letter-spacing:-.02em;color:var(--accent);display:flex;align-items:center;gap:8px}
+.logo i{width:26px;height:26px;border-radius:8px;background:var(--accent);display:grid;place-items:center}
+.logo i::after{content:"";border-left:9px solid var(--accent-ink);border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:2px}
+.search{flex:1;max-width:520px;margin-inline:auto;display:flex}
+.search input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);padding:9px 16px;border-radius:999px 0 0 999px}
+.search button{border:1px solid var(--line);border-left:0;background:var(--surface2);padding:0 16px;border-radius:0 999px 999px 0}
+.hright{display:flex;align-items:center;gap:10px;margin-left:auto}
+.btn{border:0;background:var(--accent);color:var(--accent-ink);font-weight:800;padding:9px 18px;border-radius:999px}
+.btn.ghost{background:var(--surface2);color:var(--ink)}
+.btn.sub-on{background:var(--surface2);color:var(--muted)}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sm{padding:5px 12px;font-size:13px}
+.av{border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font:800 14px var(--f-display);object-fit:cover;flex:none;overflow:hidden}
+.menu{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(var(--hh) - 6px);min-width:220px;background:var(--surface);
+  border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.menu a,.menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 12px;border-radius:9px}
+.menu a:hover,.menu button:hover{background:var(--surface2)}
+.menu .who{padding:8px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:6px;font-weight:800}
+
+/* Каркас */
+.shell{display:grid;grid-template-columns:200px minmax(0,1fr)}
+nav.side{position:sticky;top:var(--hh);height:calc(100dvh - var(--hh));padding:16px 10px 16px max(10px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--line)}
+nav.side a{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;font-weight:700;color:var(--muted)}
+nav.side a:hover{background:var(--surface2);color:var(--ink)}
+nav.side a.on{background:var(--accent-soft);color:var(--accent)}
+nav.side svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+main{min-width:0;padding:22px max(16px,env(safe-area-inset-right,0px)) 60px 24px}
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.02em;margin:0;text-wrap:balance}
+h1{font-size:26px} h2{font-size:18px} h3{font-size:15px}
+.row{display:flex;align-items:center;gap:12px}
+.wrap{flex-wrap:wrap}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* Сетка видео */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px 16px;margin-top:18px}
+.card{display:flex;flex-direction:column;gap:10px;min-width:0}
+.thumb{aspect-ratio:16/9;border-radius:14px;background:var(--surface2) center/cover no-repeat;overflow:hidden;position:relative}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.card:hover .thumb{outline:2px solid var(--accent)}
+.card .meta{display:flex;gap:10px;min-width:0}
+.card .t{font-weight:800;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .m{font-size:13px;color:var(--muted)}
+.shelf{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;margin-top:14px;scroll-snap-type:x proximity}
+.shelf .card{width:150px;flex:none;scroll-snap-align:start}
+.shelf .thumb{aspect-ratio:9/16}
+.empty{padding:50px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px;margin-top:20px}
+
+/* Просмотр */
+.watch{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;max-width:1000px}
+.player{position:relative;background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9}
+.player.vertical{aspect-ratio:9/16;max-height:78dvh;margin-inline:auto}
+.player video{width:100%;height:100%;display:block;background:#000}
+.ploading{position:absolute;inset:0;display:grid;place-items:center;color:#fff;background:rgba(0,0,0,.6);font-weight:700;text-align:center;padding:20px}
+.bar{height:6px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:8px;width:min(260px,70vw)}
+.bar b{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.pill{border:0;background:var(--surface2);padding:9px 16px;border-radius:999px;font-weight:800;display:inline-flex;gap:8px;align-items:center}
+.pill.on{background:var(--accent);color:var(--accent-ink)}
+.pill svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.pill.on svg{fill:currentColor}
+.desc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;white-space:pre-wrap;overflow-wrap:anywhere}
+.cform{display:flex;gap:10px;align-items:flex-start}
+.cform textarea{flex:1;min-width:0;resize:vertical;min-height:44px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.comment{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.comment p{margin:2px 0 0;overflow-wrap:anywhere;white-space:pre-wrap}
+
+/* ГУБАПЫ */
+.reels{height:calc(100dvh - var(--hh) - 44px);overflow-y:auto;scroll-snap-type:y mandatory;display:flex;flex-direction:column;align-items:center;gap:16px;scrollbar-width:none}
+.reels::-webkit-scrollbar{display:none}
+.reel{scroll-snap-align:center;flex:none;height:100%;aspect-ratio:9/16;max-width:100%;position:relative;border-radius:18px;overflow:hidden;background:#000}
+.reel video{width:100%;height:100%;object-fit:cover}
+.reel .cap{position:absolute;left:0;right:64px;bottom:0;padding:50px 14px 16px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.75))}
+.reel .cap b{display:block}
+.reel .side{position:absolute;right:8px;bottom:16px;display:flex;flex-direction:column;gap:14px;align-items:center}
+.rb{width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.18);backdrop-filter:blur(6px);color:#fff;display:grid;place-items:center}
+.rb.on{background:var(--accent);color:var(--accent-ink)}
+.rb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.rb.on svg{fill:currentColor}
+.rc{color:#fff;font-size:12px;font-weight:800;text-align:center;margin-top:-10px}
+
+/* Канал / Мастерская */
+.chead{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:6px 0 4px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 6px;border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:0;padding:10px 14px;font-weight:800;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--accent);border-color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.stat b{display:block;font:700 28px var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px;font-weight:700}
+.tw{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td .tt{display:flex;align-items:center;gap:12px;min-width:0}
+td .tt img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:var(--surface2);flex:none}
+.tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.05em}
+
+/* Модалки */
+.back{position:fixed;inset:0;z-index:50;background:rgba(0,10,4,.6);display:grid;place-items:center;padding:16px;overflow-y:auto}
+.modal{width:min(520px,100%);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;display:grid;gap:14px}
+.modal label{display:grid;gap:6px;font-weight:700;font-size:13px;color:var(--muted)}
+.modal input[type=text],.modal textarea,.modal select{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;color:var(--ink);width:100%}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted)}
+.err{color:var(--danger);font-weight:700;font-size:13px;min-height:1em}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:80;max-width:90vw}
+.avpick{display:flex;align-items:center;gap:16px}
+
+@media (max-width:800px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  nav.side{position:fixed;inset:auto 0 0 0;top:auto;height:auto;flex-direction:row;justify-content:space-around;z-index:30;background:var(--surface);
+    border-right:0;border-top:1px solid var(--line);padding:6px max(6px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px))}
+  nav.side a{flex-direction:column;gap:2px;font-size:11px;padding:6px 10px}
+  main{padding:16px max(16px,env(safe-area-inset-right,0px)) 100px max(16px,env(safe-area-inset-left,0px))}
+  .reels{height:calc(100dvh - var(--hh) - 90px)}
+  .search{display:none}
+  .search.open{display:flex;position:absolute;left:12px;right:12px;top:8px;z-index:5}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="#/" aria-label="GYBAP"><i></i><span>GYBAP</span></a>
+  <form class="search" id="searchForm">
+    <input id="q" type="search" placeholder="Поиск видео" autocomplete="off">
+    <button type="submit" aria-label="Найти">Найти</button>
+  </form>
+  <div class="hright" id="hright"></div>
+</header>
+<div id="menuHost"></div>
+<div class="shell">
+  <nav class="side" id="side">
+    <a href="#/" data-nav="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Главная</span></a>
+    <a href="#/gubaps" data-nav="gubaps"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="3"/><path d="M11 9l3 2-3 2z"/></svg><span>ГУБАПЫ</span></a>
+    <a href="#/subs" data-nav="subs"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M7 3h10M10 10l4 2.5-4 2.5z"/></svg><span>Подписки</span></a>
+    <a href="#/studio" data-nav="studio"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>Мастерская</span></a>
+  </nav>
+  <main id="app"></main>
+</div>
+<div id="modalHost"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ============ Настройки ============ */
+const SUPABASE_URL = 'https://umfmcinbddiuoweoiyyn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_QxNWmZIdmXDZbUCgppFUpQ_0nykoUyo';
+const CHUNK = 50 * 1000 * 1000;          // размер одного кусочка: 50 МБ
+const GUBAP_MAX_SEC = 180;               // максимум длины ГУБАПа
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let me = null, authUser = null;
+let myLikes = new Set();
+let soundOn = false;
+
+/* ============ Утилиты ============ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = n => new Intl.NumberFormat('ru', {notation: 'compact', maximumFractionDigits: 1}).format(n || 0);
+function ago(d) {
+  const s = (Date.now() - new Date(d)) / 1000, rtf = new Intl.RelativeTimeFormat('ru', {numeric: 'auto'});
+  const u = [['year',31536000],['month',2592000],['week',604800],['day',86400],['hour',3600],['minute',60]];
+  for (const [n, k] of u) if (s >= k) return rtf.format(-Math.floor(s / k), n);
+  return 'только что';
+}
+function toast(t) {
+  const e = document.createElement('div'); e.className = 'toast'; e.textContent = t;
+  document.body.append(e); setTimeout(() => e.remove(), 3200);
+}
+function av(p, size = 36) {
+  const st = `width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px`;
+  if (p?.avatar_url) return `<img class="av" style="${st}" src="${esc(p.avatar_url)}" alt="">`;
+  return `<span class="av" style="${st}">${esc((p?.nick || '?')[0].toUpperCase())}</span>`;
+}
+const pub = (bucket, path) => sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+const partPath = (v, i) => `${v.owner}/${v.id}/${String(i).padStart(4, '0')}`;
+const cnt = x => (x && x[0] && x[0].count) || 0;
+const icon = {
+  like: '<svg viewBox="0 0 24 24"><path d="M7 10v11H3V10zM7 10l4-8c1.7 0 3 1.3 3 3v4h6a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.6 21H7"/></svg>',
+  chat: '<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg>',
+  sound: '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 8a5 5 0 0 1 0 8"/></svg>'
+};
+
+/* ============ Авторизация и профиль ============ */
+async function loadMe() {
+  const { data: { session } } = await sb.auth.getSession();
+  authUser = session?.user || null; me = null; myLikes = new Set();
+  if (authUser) {
+    const { data } = await sb.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+    me = data;
+  }
+  renderHeader();
+  if (authUser && !me) openProfile(true);
+}
+function login(mode = 'in') {
+  const up = mode === 'up';
+  $('#modalHost').innerHTML = `<div class="back"><div class="modal" role="dialog" aria-label="Вход">
+    <h2>${up ? 'Регистрация' : 'Вход'}</h2>
+    <label>Почта<input id="aemail" type="email" autocomplete="email" inputmode="email"></label>
+    <label>Пароль${up ? ' (минимум 6 символов)' : ''}<input id="apass" type="password" autocomplete="${up ? 'new-password' : 'current-password'}"></label>
+    <div class="err" id="aerr"></div>
+    <div class="row" style="justify-content:space-between">
+      <button class="btn ghost" id="aswitch">${up ? 'Уже есть аккаунт' : 'Создать аккаунт'}</button>
+      <div class="row"><button class="btn ghost" data-act="closeModal">Отмена</button>
+      <button class="btn" id="ago">${up ? 'Зарегистрироваться' : 'Войти'}</button></div></div></div></div>`;
+  $('#aswitch').onclick = () => login(up ? 'in' : 'up');
+  const go = async () => {
+    const email = $('#aemail').value.trim(), password = $('#apass').value, err = $('#aerr'), btn = $('#ago');
+    if (!email || !password) { err.textContent = 'Введите почту и пароль'; return; }
+    if (up && password.length < 6) { err.textContent = 'Пароль слишком короткий (минимум 6 символов)'; return; }
+    btn.disabled = true; err.textContent = '';
+    const { data, error } = up
+      ? await sb.auth.signUp({ email, password })
+      : await sb.auth.signInWithPassword({ email, password });
+    btn.disabled = false;
+    if (error) {
+      const m = error.message || '';
+      err.textContent = /invalid login/i.test(m) ? 'Неверная почта или пароль'
+        : /already registered/i.test(m) ? 'Эта почта уже зарегистрирована, нажмите «Уже есть аккаунт»'
+        : /not confirmed/i.test(m) ? 'Подтвердите почту по письму и войдите снова'
+        : m;
+      return;
+    }
+    if (up && !data.session) { err.textContent = 'Мы отправили письмо — подтвердите почту и войдите.'; return; }
+    closeModal();
+  };
+  $('#ago').onclick = go;
+  $('#apass').onkeydown = e => { if (e.key === 'Enter') go(); };
+}
+function needLogin() {
+  if (me) return false;
+  if (authUser) openProfile(true); else { toast('Войдите в аккаунт'); }
+  return true;
+}
+function renderHeader() {
+  const h = $('#hright');
+  if (!me) {
+    h.innerHTML = `<button class="btn" data-act="login">Войти</button>`;
+  } else {
+    h.innerHTML = `<button class="btn" data-act="upload">+ Загрузить</button>
+      <button class="av-btn" data-act="menu" aria-label="Меню профиля" style="background:none;border:0;padding:0">${av(me, 38)}</button>`;
+  }
+  $('#menuHost').innerHTML = '';
+}
+function toggleMenu() {
+  const host = $('#menuHost');
+  if (host.innerHTML) { host.innerHTML = ''; return; }
+  host.innerHTML = `<div class="menu"><div class="who">@${esc(me.nick)}</div>
+    <a href="#/channel/${me.id}">Мой канал</a>
+    <a href="#/studio">Мастерская</a>
+    <button data-act="editProfile">Изменить ник и аватарку</button>
+    <button data-act="logout">Выйти</button></div>`;
+}
+
+function openProfile(first = false) {
+  const g = authUser?.user_metadata || {};
+  let avatarUrl = me?.avatar_url || g.avatar_url || g.picture || '';
+  let file = null;
+  $('#modalHost').innerHTML = `<div class="back"><div class="modal" role="dialog" aria-label="Профиль">
+    <h2>${first ? 'Добро пожаловать в GYBAP' : 'Ваш профиль'}</h2>
+    <p class="muted small" style="margin:0">${first ? 'Выберите ник и аватарку. Ник увидят все.' : 'Измените ник или аватарку.'}</p>
+    <div class="avpick"><div id="avPrev">${av({nick: me?.nick || g.name || '?', avatar_url: avatarUrl}, 72)}</div>
+      <label style="flex:1">Аватарка<input id="avFile" type="file" accept="image/*"></label></div>
+    <label>Ник (3–20 символов: буквы, цифры, _)<input id="nick" type="text" maxlength="20" value="${esc(me?.nick || '')}" autocomplete="off"></label>
+    <div class="err" id="perr"></div>
+    <div class="row" style="justify-content:flex-end">
+      ${first ? '' : '<button class="btn ghost" data-act="closeModal">Отмена</button>'}
+      <button class="btn" id="psave">Сохранить</button></div></div></div>`;
+  $('#avFile').onchange = e => {
+    file = e.target.files[0]; if (!file) return;
+    avatarUrl = URL.createObjectURL(file);
+    $('#avPrev').innerHTML = `<img class="av" style="width:72px;height:72px" src="${avatarUrl}" alt="">`;
+  };
+  $('#psave').onclick = async () => {
+    const nick = $('#nick').value.trim(), err = $('#perr'), btn = $('#psave');
+    if (!/^[A-Za-z0-9_А-Яа-яЁё]{3,20}$/.test(nick)) { err.textContent = 'Ник: 3–20 символов, только буквы, цифры и _'; return; }
+    btn.disabled = true; err.textContent = '';
+    try {
+      let url = me?.avatar_url || g.avatar_url || g.picture || null;
+      if (file) {
+        const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const path = `${authUser.id}/avatar-${Date.now()}.${ext}`;
+        const { error } = await sb.storage.from('images').upload(path, file, { contentType: file.type });
+        if (error) throw error;
+        url = pub('images', path);
+      }
+      const { error } = await sb.from('profiles').upsert({ id: authUser.id, nick, avatar_url: url });
+      if (error) throw error;
+      closeModal(); await loadMe(); toast('Профиль сохранён'); route();
+    } catch (e) {
+      err.textContent = e.code === '23505' ? 'Этот ник уже занят' : (e.message || 'Ошибка'); btn.disabled = false;
+    }
+  };
+}
+function closeModal() { $('#modalHost').innerHTML = ''; }
+
+/* ============ Данные ============ */
+const SEL = '*, profiles!owner(nick,avatar_url), likes(count), comments(count)';
+async function fetchVideos({ kind, owner, q, owners, limit = 60 } = {}) {
+  let r = sb.from('videos').select(SEL).order('created_at', { ascending: false }).limit(limit);
+  if (kind) r = r.eq('kind', kind);
+  if (owner) r = r.eq('owner', owner);
+  if (owners) r = r.in('owner', owners);
+  if (q) r = r.ilike('title', `%${q.replace(/[%_]/g, '')}%`);
+  const { data, error } = await r;
+  if (error) { toast(error.message); return []; }
+  await loadMyLikes(data);
+  return data;
+}
+async function loadMyLikes(list) {
+  if (!me || !list.length) return;
+  const { data } = await sb.from('likes').select('video_id').eq('user_id', me.id).in('video_id', list.map(v => v.id));
+  (data || []).forEach(l => myLikes.add(l.video_id));
+}
+/* Возвращает адрес, который можно подставить в <video>. Если видео было нарезано, склеивает кусочки. */
+const blobCache = new Map();
+async function playable(v, onProg) {
+  if (v.parts <= 1) return pub('videos', partPath(v, 0));
+  if (blobCache.has(v.id)) return blobCache.get(v.id);
+  const bufs = [];
+  for (let i = 0; i < v.parts; i++) {
+    const res = await fetch(pub('videos', partPath(v, i)));
+    if (!res.ok) throw new Error('Не удалось скачать часть ' + (i + 1));
+    bufs.push(await res.blob());
+    onProg && onProg((i + 1) / v.parts);
+  }
+  const url = URL.createObjectURL(new Blob(bufs, { type: v.mime || 'video/mp4' }));
+  blobCache.set(v.id, url);
+  return url;
+}
+
+/* ============ Карточки ============ */
+function card(v) {
+  const thumb = v.thumb_url ? `<img src="${esc(v.thumb_url)}" alt="" loading="lazy">` : '';
+  return `<a class="card" href="#/watch/${v.id}">
+    <div class="thumb">${thumb}</div>
+    <div class="meta"><a href="#/channel/${v.owner}" onclick="event.stopPropagation()">${av(v.profiles, 36)}</a>
+    <div style="min-width:0"><div class="t">${esc(v.title)}</div>
+    <div class="m">${esc(v.profiles?.nick)} · ${num(v.views)} просм. · ${ago(v.created_at)}</div></div></div></a>`;
+}
+function gcard(v) {
+  const thumb = v.thumb_url ? `<img src="${esc(v.thumb_url)}" alt="" loading="lazy">` : '';
+  return `<a class="card" href="#/gubaps/${v.id}"><div class="thumb">${thumb}</div>
+    <div><div class="t" style="font-size:13px">${esc(v.title)}</div><div class="m">${num(v.views)} просм.</div></div></a>`;
+}
+
+/* ============ Страницы ============ */
+const app = $('#app');
+let cleanup = null;
+
+async function viewHome(q) {
+  app.innerHTML = '<p class="muted">Загрузка…</p>';
+  const [vids, gubs] = await Promise.all([fetchVideos({ kind: 'video', q }), q ? [] : fetchVideos({ kind: 'gubap', limit: 14 })]);
+  app.innerHTML = `${q ? `<h1>Результаты: «${esc(q)}»</h1>` : ''}
+    ${gubs.length ? `<div class="row" style="justify-content:space-between"><h2>ГУБАПЫ</h2><a class="muted small" href="#/gubaps">Смотреть все →</a></div><div class="shelf">${gubs.map(gcard).join('')}</div>` : ''}
+    ${!q ? '<h2 style="margin-top:14px">Новые видео</h2>' : ''}
+    ${vids.length ? `<div class="grid">${vids.map(card).join('')}</div>` : `<div class="empty">${q ? 'Ничего не найдено.' : 'Пока нет видео. Загрузите первое!'}</div>`}`;
+}
+
+async function viewSubs() {
+  if (!me) { app.innerHTML = `<div class="empty">Войдите, чтобы видеть видео из ваших подписок.<br><br><button class="btn" data-act="login">Войти</button></div>`; return; }
+  const { data } = await sb.from('subscriptions').select('channel_id').eq('subscriber_id', me.id);
+  const ids = (data || []).map(x => x.channel_id);
+  const vids = ids.length ? await fetchVideos({ owners: ids }) : [];
+  app.innerHTML = `<h1>Подписки</h1>${vids.length ? `<div class="grid">${vids.map(card).join('')}</div>` : '<div class="empty">Подпишитесь на авторов, и их видео появятся здесь.</div>'}`;
+}
+
+async function viewWatch(id) {
+  app.innerHTML = '<p class="muted">Загрузка…</p>';
+  const { data: v } = await sb.from('videos').select(SEL).eq('id', id).maybeSingle();
+  if (!v) { app.innerHTML = '<div class="empty">Видео не найдено.</div>'; return; }
+  await loadMyLikes([v]);
+  sb.rpc('add_view', { vid: id });
+  const [{ count: subs }, subRow] = await Promise.all([
+    sb.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_id', v.owner),
+    me ? sb.from('subscriptions').select('channel_id').eq('subscriber_id', me.id).eq('channel_id', v.owner).maybeSingle() : { data: null }
+  ]);
+  const subbed = !!subRow.data, liked = myLikes.has(v.id);
+  app.innerHTML = `<div class="watch">
+    <div class="player ${v.kind === 'gubap' ? 'vertical' : ''}"><video id="pv" controls playsinline autoplay></video><div class="ploading" id="pl">Загрузка видео…</div></div>
+    <h1 style="font-size:20px">${esc(v.title)}</h1>
+    <div class="actions">
+      <div class="row"><a href="#/channel/${v.owner}">${av(v.profiles, 42)}</a>
+        <div><a href="#/channel/${v.owner}"><b>${esc(v.profiles?.nick)}</b></a><div class="muted small" id="subCount">${num(subs)} подписчиков</div></div>
+        ${me?.id === v.owner ? '' : `<button class="btn sm ${subbed ? 'sub-on' : ''}" data-act="sub" data-id="${v.owner}" id="subBtn">${subbed ? 'Вы подписаны' : 'Подписаться'}</button>`}</div>
+      <button class="pill ${liked ? 'on' : ''}" data-act="like" data-id="${v.id}" id="likeBtn">${icon.like}<span id="likeN">${cnt(v.likes)}</span></button>
+    </div>
+    <div class="desc"><div class="muted small">${num(v.views + 1)} просм. · ${ago(v.created_at)}</div>${v.description ? '<div style="margin-top:6px">' + esc(v.description) + '</div>' : ''}</div>
+    <section><h2>Комментарии <span class="muted" id="cN">${cnt(v.comments)}</span></h2>
+      <div class="cform" style="margin:14px 0">${me ? av(me, 38) : ''}<textarea id="ctext" maxlength="1000" placeholder="${me ? 'Напишите комментарий' : 'Войдите, чтобы комментировать'}" ${me ? '' : 'disabled'}></textarea>
+      <button class="btn" data-act="comment" data-id="${v.id}">Отправить</button></div>
+      <div id="clist"></div></section></div>`;
+  loadComments(v);
+  const vid = $('#pv'), pl = $('#pl');
+  try {
+    const src = await playable(v, p => pl.innerHTML = `Собираю видео из ${v.parts} частей…<div class="bar"><b style="width:${Math.round(p * 100)}%"></b></div>`);
+    vid.src = src; pl.remove(); vid.play().catch(() => {});
+  } catch (e) { pl.textContent = 'Ошибка: ' + e.message; }
+}
+async function loadComments(v) {
+  const { data } = await sb.from('comments').select('*, profiles!user_id(nick,avatar_url)').eq('video_id', v.id).order('created_at', { ascending: false }).limit(200);
+  $('#cN').textContent = (data || []).length;
+  $('#clist').innerHTML = (data || []).map(c => `<div class="comment">${av(c.profiles, 36)}<div style="flex:1;min-width:0">
+    <div class="small"><b>@${esc(c.profiles?.nick)}</b> <span class="muted">${ago(c.created_at)}</span></div><p>${esc(c.body)}</p></div>
+    ${me && (me.id === c.user_id || me.id === v.owner) ? `<button class="btn danger sm" data-act="delComment" data-id="${c.id}" data-v="${v.id}">Удалить</button>` : ''}</div>`).join('') || '<p class="muted">Комментариев пока нет.</p>';
+}
+
+async function viewGubaps(startId) {
+  app.innerHTML = '<p class="muted">Загрузка…</p>';
+  let list = await fetchVideos({ kind: 'gubap', limit: 40 });
+  if (startId) { const i = list.findIndex(v => v.id === startId); if (i > 0) list = [list[i], ...list.filter((_, j) => j !== i)]; }
+  if (!list.length) { app.innerHTML = '<div class="empty">ГУБАПОВ пока нет. Загрузите первый короткий ролик!</div>'; return; }
+  app.innerHTML = `<div class="reels" id="reels">${list.map(v => `<div class="reel" data-id="${v.id}">
+    <video playsinline loop muted preload="none" ${v.thumb_url ? `poster="${esc(v.thumb_url)}"` : ''}></video>
+    <div class="cap"><b>@${esc(v.profiles?.nick)}</b><span>${esc(v.title)}</span></div>
+    <div class="side">
+      <a href="#/channel/${v.owner}">${av(v.profiles, 46)}</a>
+      <button class="rb ${myLikes.has(v.id) ? 'on' : ''}" data-act="like" data-id="${v.id}" aria-label="Нравится">${icon.like}</button><div class="rc" data-ln="${v.id}">${cnt(v.likes)}</div>
+      <a class="rb" href="#/watch/${v.id}" aria-label="Комментарии">${icon.chat}</a><div class="rc">${cnt(v.comments)}</div>
+      <button class="rb" data-act="sound" aria-label="Звук">${icon.sound}</button>
+    </div></div>`).join('')}</div>`;
+  const map = new Map(list.map(v => [v.id, v]));
+  const io = new IntersectionObserver(async ents => {
+    for (const e of ents) {
+      const el = e.target, vid = $('video', el), v = map.get(el.dataset.id);
+      if (e.isIntersecting) {
+        if (!vid.src) { try { vid.src = await playable(v); } catch { continue; } sb.rpc('add_view', { vid: v.id }); }
+        vid.muted = !soundOn; vid.play().catch(() => {});
+      } else vid.pause();
+    }
+  }, { root: $('#reels'), threshold: .7 });
+  $$('.reel').forEach(r => { io.observe(r); $('video', r).onclick = ev => ev.target.paused ? ev.target.play() : ev.target.pause(); });
+  if (startId) $('.reel').scrollIntoView();
+  cleanup = () => io.disconnect();
+}
+
+async function viewChannel(id) {
+  app.innerHTML = '<p class="muted">Загрузка…</p>';
+  const { data: p } = await sb.from('profiles').select('*').eq('id', id).maybeSingle();
+  if (!p) { app.innerHTML = '<div class="empty">Канал не найден.</div>'; return; }
+  const [vids, { count: subs }, subRow] = await Promise.all([
+    fetchVideos({ owner: id }),
+    sb.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_id', id),
+    me ? sb.from('subscriptions').select('channel_id').eq('subscriber_id', me.id).eq('channel_id', id).maybeSingle() : { data: null }
+  ]);
+  const subbed = !!subRow.data, videos = vids.filter(v => v.kind === 'video'), gubs = vids.filter(v => v.kind === 'gubap');
+  app.innerHTML = `<div class="chead">${av(p, 84)}<div style="flex:1;min-width:200px"><h1>@${esc(p.nick)}</h1>
+    <div class="muted">${num(subs)} подписчиков · ${vids.length} роликов</div></div>
+    ${me?.id === id ? '<a class="btn ghost" href="#/studio">Мастерская</a>' : `<button class="btn ${subbed ? 'sub-on' : ''}" data-act="sub" data-id="${id}" id="subBtn" data-reload="1">${subbed ? 'Вы подписаны' : 'Подписаться'}</button>`}</div>
+    ${gubs.length ? `<h2 style="margin-top:20px">ГУБАПЫ</h2><div class="shelf">${gubs.map(gcard).join('')}</div>` : ''}
+    <h2 style="margin-top:14px">Видео</h2>${videos.length ? `<div class="grid">${videos.map(card).join('')}</div>` : '<div class="empty">Видео пока нет.</div>'}`;
+}
+
+/* ---- Мастерская ---- */
+let studioTab = 'overview';
+async function viewStudio() {
+  if (!me) { app.innerHTML = `<div class="empty">Войдите, чтобы открыть мастерскую.<br><br><button class="btn" data-act="login">Войти</button></div>`; return; }
+  app.innerHTML = '<p class="muted">Загрузка…</p>';
+  const vids = await fetchVideos({ owner: me.id, limit: 200 });
+  const ids = vids.map(v => v.id);
+  const [{ data: coms }, { data: subs }] = await Promise.all([
+    ids.length ? sb.from('comments').select('*, profiles!user_id(nick,avatar_url), videos(title)').in('video_id', ids).order('created_at', { ascending: false }).limit(200) : { data: [] },
+    sb.from('subscriptions').select('created_at, profiles!subscriptions_subscriber_id_fkey(nick,avatar_url,id)').eq('channel_id', me.id).order('created_at', { ascending: false }).limit(200)
+  ]);
+  const totals = { views: vids.reduce((a, v) => a + v.views, 0), likes: vids.reduce((a, v) => a + cnt(v.likes), 0), comments: (coms || []).length, subs: (subs || []).length };
+  const tab = {
+    overview: () => `<div class="stats">
+      <div class="stat"><b>${num(totals.views)}</b><span>Просмотры</span></div>
+      <div class="stat"><b>${num(totals.likes)}</b><span>Лайки</span></div>
+      <div class="stat"><b>${num(totals.comments)}</b><span>Комментарии</span></div>
+      <div class="stat"><b>${num(totals.subs)}</b><span>Подписчики</span></div>
+      <div class="stat"><b>${vids.length}</b><span>Роликов</span></div></div>
+      <h2 style="margin-top:24px">Лучшие ролики</h2>${table([...vids].sort((a, b) => b.views - a.views).slice(0, 5))}`,
+    videos: () => `<div class="row" style="justify-content:space-between;margin-top:16px"><h2>Все ролики</h2><button class="btn" data-act="upload">+ Загрузить</button></div>${table(vids, true)}`,
+    comments: () => (coms || []).length ? `<div style="margin-top:12px">${coms.map(c => `<div class="comment">${av(c.profiles, 36)}<div style="flex:1;min-width:0">
+      <div class="small"><b>@${esc(c.profiles?.nick)}</b> <span class="muted">· ${esc(c.videos?.title)} · ${ago(c.created_at)}</span></div><p>${esc(c.body)}</p></div>
+      <button class="btn danger sm" data-act="delComment" data-id="${c.id}" data-studio="1">Удалить</button></div>`).join('')}</div>` : '<div class="empty">Комментариев пока нет.</div>',
+    subs: () => (subs || []).length ? `<div class="tw"><table><thead><tr><th>Подписчик</th><th>Дата</th></tr></thead><tbody>${subs.map(s => `<tr><td><a class="tt" href="#/channel/${s.profiles?.id}">${av(s.profiles, 32)}<b>@${esc(s.profiles?.nick)}</b></a></td><td class="muted">${ago(s.created_at)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Подписчиков пока нет.</div>'
+  };
+  function table(list, manage) {
+    if (!list.length) return '<div class="empty">Роликов пока нет.</div>';
+    return `<div class="tw"><table><thead><tr><th>Ролик</th><th>Просм.</th><th>Лайки</th><th>Комм.</th><th>Дата</th>${manage ? '<th></th>' : ''}</tr></thead><tbody>${list.map(v => `<tr>
+      <td><a class="tt" href="#/watch/${v.id}">${v.thumb_url ? `<img src="${esc(v.thumb_url)}" alt="">` : '<span style="width:96px;aspect-ratio:16/9;background:var(--surface2);border-radius:8px;flex:none"></span>'}
+      <span style="min-width:0"><b>${esc(v.title)}</b><br><span class="tag">${v.kind === 'gubap' ? 'ГУБАП' : 'Видео'}</span>${v.parts > 1 ? ` <span class="muted small">${v.parts} частей</span>` : ''}</span></a></td>
+      <td>${num(v.views)}</td><td>${cnt(v.likes)}</td><td>${cnt(v.comments)}</td><td class="muted">${ago(v.created_at)}</td>
+      ${manage ? `<td><button class="btn danger sm" data-act="delVideo" data-id="${v.id}">Удалить</button></td>` : ''}</tr>`).join('')}</tbody></table></div>`;
+  }
+  app.innerHTML = `<h1>Мастерская</h1><div class="tabs" role="tablist">
+    ${[['overview','Обзор'],['videos','Видео'],['comments','Комментарии'],['subs','Подписчики']].map(([k, n]) => `<button class="${studioTab === k ? 'on' : ''}" data-act="tab" data-id="${k}" role="tab">${n}</button>`).join('')}</div>
+    <div>${tab[studioTab]()}</div>`;
+}
+
+/* ============ Загрузка видео ============ */
+function openUpload() {
+  if (needLogin()) return;
+  $('#modalHost').innerHTML = `<div class="back"><div class="modal" role="dialog" aria-label="Загрузка">
+    <h2>Загрузить видео</h2>
+    <label class="drop">Выберите файл (любого размера, большие режутся по 50 МБ)<br><input id="ufile" type="file" accept="video/*" style="margin-top:10px"></label>
+    <label>Тип<select id="ukind"><option value="video">Обычное видео</option><option value="gubap">ГУБАП (короткое вертикальное, до ${GUBAP_MAX_SEC / 60} мин)</option></select></label>
+    <label>Название<input id="utitle" type="text" maxlength="120"></label>
+    <label>Описание<textarea id="udesc" rows="3" maxlength="2000"></textarea></label>
+    <div id="uprog" hidden><div class="small" id="ustat"></div><div class="bar" style="width:100%"><b id="ubar"></b></div></div>
+    <div class="err" id="uerr"></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-act="closeModal" id="ucancel">Отмена</button><button class="btn" id="ugo">Загрузить</button></div></div></div>`;
+  $('#ufile').onchange = e => { const f = e.target.files[0]; if (f && !$('#utitle').value) $('#utitle').value = f.name.replace(/\.[^.]+$/, '').slice(0, 120); };
+  $('#ugo').onclick = doUpload;
+}
+function videoMeta(file) {
+  return new Promise(res => {
+    const url = URL.createObjectURL(file), v = document.createElement('video');
+    v.preload = 'metadata'; v.muted = true; v.playsInline = true; v.src = url;
+    const fail = () => { URL.revokeObjectURL(url); res({ dur: 0, thumb: null }); };
+    v.onerror = fail;
+    v.onloadedmetadata = () => { v.currentTime = Math.min(1, (v.duration || 1) / 4); };
+    v.onseeked = () => {
+      try {
+        const w = 480, h = Math.round(w * v.videoHeight / v.videoWidth) || 270, c = document.createElement('canvas');
+        c.width = w; c.height = h; c.getContext('2d').drawImage(v, 0, 0, w, h);
+        c.toBlob(b => { URL.revokeObjectURL(url); res({ dur: v.duration, thumb: b }); }, 'image/jpeg', .8);
+      } catch { fail(); }
+    };
+    setTimeout(fail, 15000);
+  });
+}
+async function doUpload() {
+  const file = $('#ufile').files[0], title = $('#utitle').value.trim(), kind = $('#ukind').value, err = $('#uerr');
+  if (!file) { err.textContent = 'Выберите видеофайл'; return; }
+  if (!title) { err.textContent = 'Введите название'; return; }
+  err.textContent = ''; $('#ugo').disabled = true; $('#ucancel').disabled = true; $('#uprog').hidden = false;
+  const stat = $('#ustat'), bar = $('#ubar');
+  const id = crypto.randomUUID(), parts = Math.max(1, Math.ceil(file.size / CHUNK));
+  const mime = file.type || 'video/mp4';
+  const rec = { id, owner: me.id, mime };
+  try {
+    stat.textContent = 'Готовлю обложку…';
+    const { dur, thumb } = await videoMeta(file);
+    if (kind === 'gubap' && dur > GUBAP_MAX_SEC) throw new Error(`ГУБАП должен быть не длиннее ${GUBAP_MAX_SEC / 60} минут`);
+    let thumbUrl = null;
+    if (thumb) {
+      const tp = `${me.id}/${id}.jpg`;
+      const { error } = await sb.storage.from('images').upload(tp, thumb, { contentType: 'image/jpeg' });
+      if (!error) thumbUrl = pub('images', tp);
+    }
+    for (let i = 0; i < parts; i++) {
+      const blob = file.slice(i * CHUNK, Math.min(file.size, (i + 1) * CHUNK));
+      stat.textContent = parts > 1 ? `Часть ${i + 1} из ${parts}…` : 'Загружаю видео…';
+      let ok = false, last;
+      for (let t = 0; t < 3 && !ok; t++) {
+        const { error } = await sb.storage.from('videos').upload(partPath(rec, i), blob, { contentType: parts > 1 ? 'application/octet-stream' : mime, upsert: true });
+        if (error) { last = error; await new Promise(r => setTimeout(r, 1200 * (t + 1))); } else ok = true;
+      }
+      if (!ok) throw new Error(last?.message || 'Ошибка загрузки части ' + (i + 1));
+      bar.style.width = Math.round((i + 1) / parts * 100) + '%';
+    }
+    const { error } = await sb.from('videos').insert({
+      id, owner: me.id, kind, title, description: $('#udesc').value.trim(), mime, size_bytes: file.size, parts, thumb_url: thumbUrl
+    });
+    if (error) throw error;
+    closeModal(); toast('Видео опубликовано');
+    location.hash = kind === 'gubap' ? '#/gubaps/' + id : '#/watch/' + id;
+  } catch (e) {
+    err.textContent = e.message || 'Ошибка'; $('#ugo').disabled = false; $('#ucancel').disabled = false;
+    if (/exceeded|too large|size/i.test(err.textContent)) err.textContent += ' (проверьте лимит размера файла в Supabase: Storage → Settings)';
+  }
+}
+
+/* ============ Действия ============ */
+const actions = {
+  login: () => login('in'), upload: openUpload, menu: toggleMenu, closeModal,
+  editProfile() { $('#menuHost').innerHTML = ''; openProfile(false); },
+  async logout() { await sb.auth.signOut(); me = null; authUser = null; renderHeader(); location.hash = '#/'; route(); },
+  tab(el) { studioTab = el.dataset.id; viewStudio(); },
+  sound() { soundOn = !soundOn; $$('.reel video').forEach(v => v.muted = !soundOn); toast(soundOn ? 'Звук включён' : 'Звук выключен'); },
+  async like(el) {
+    if (needLogin()) return;
+    const id = el.dataset.id, was = myLikes.has(id);
+    const r = was ? await sb.from('likes').delete().eq('video_id', id).eq('user_id', me.id) : await sb.from('likes').insert({ video_id: id, user_id: me.id });
+    if (r.error) return toast(r.error.message);
+    was ? myLikes.delete(id) : myLikes.add(id);
+    el.classList.toggle('on', !was);
+    const n = $('#likeN'), rc = $(`[data-ln="${id}"]`);
+    if (n && el.id === 'likeBtn') n.textContent = +n.textContent + (was ? -1 : 1);
+    if (rc) rc.textContent = +rc.textContent + (was ? -1 : 1);
+  },
+  async sub(el) {
+    if (needLogin()) return;
+    const ch = el.dataset.id, was = el.classList.contains('sub-on');
+    const r = was ? await sb.from('subscriptions').delete().eq('subscriber_id', me.id).eq('channel_id', ch) : await sb.from('subscriptions').insert({ subscriber_id: me.id, channel_id: ch });
+    if (r.error) return toast(r.error.message);
+    el.classList.toggle('sub-on', !was); el.textContent = was ? 'Подписаться' : 'Вы подписаны';
+    const { count } = await sb.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_id', ch);
+    const sc = $('#subCount'); if (sc) sc.textContent = num(count) + ' подписчиков';
+  },
+  async comment(el) {
+    if (needLogin()) return;
+    const body = $('#ctext').value.trim(); if (!body) return;
+    el.disabled = true;
+    const { error } = await sb.from('comments').insert({ video_id: el.dataset.id, user_id: me.id, body });
+    el.disabled = false;
+    if (error) return toast(error.message);
+    $('#ctext').value = '';
+    const { data: v } = await sb.from('videos').select('id,owner').eq('id', el.dataset.id).single();
+    loadComments(v);
+  },
+  async delComment(el) {
+    const { error } = await sb.from('comments').delete().eq('id', el.dataset.id);
+    if (error) return toast(error.message);
+    if (el.dataset.studio) viewStudio(); else { const { data: v } = await sb.from('videos').select('id,owner').eq('id', el.dataset.v).single(); loadComments(v); }
+  },
+  async delVideo(el) {
+    if (el.dataset.sure !== '1') { el.dataset.sure = '1'; el.textContent = 'Точно удалить?'; setTimeout(() => { el.dataset.sure = ''; el.textContent = 'Удалить'; }, 4000); return; }
+    const { data: v } = await sb.from('videos').select('*').eq('id', el.dataset.id).single();
+    const paths = Array.from({ length: v.parts }, (_, i) => partPath(v, i));
+    await sb.storage.from('videos').remove(paths);
+    await sb.storage.from('images').remove([`${v.owner}/${v.id}.jpg`]);
+    const { error } = await sb.from('videos').delete().eq('id', v.id);
+    if (error) return toast(error.message);
+    toast('Ролик удалён'); viewStudio();
+  }
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) { if (!e.target.closest('.menu')) $('#menuHost').innerHTML = ''; return; }
+  e.preventDefault(); const f = actions[el.dataset.act]; if (f) f(el);
+});
+$('#searchForm').onsubmit = e => { e.preventDefault(); const q = $('#q').value.trim(); location.hash = q ? '#/search/' + encodeURIComponent(q) : '#/'; };
+
+/* ============ Маршрутизация ============ */
+function route() {
+  if (cleanup) { cleanup(); cleanup = null; }
+  $$('video').forEach(v => v.pause());
+  const [, page = '', arg = ''] = (location.hash || '#/').slice(1).split('/');
+  const nav = { '': 'home', search: 'home', gubaps: 'gubaps', subs: 'subs', studio: 'studio', channel: 'studio' }[page];
+  $$('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === nav && !(page === 'channel')));
+  window.scrollTo(0, 0);
+  if (page === 'watch') viewWatch(arg);
+  else if (page === 'gubaps') viewGubaps(arg);
+  else if (page === 'channel') viewChannel(arg);
+  else if (page === 'studio') viewStudio();
+  else if (page === 'subs') viewSubs();
+  else if (page === 'search') viewHome(decodeURIComponent(arg));
+  else viewHome();
+}
+window.addEventListener('hashchange', route);
+sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_IN' || ev === 'SIGNED_OUT') setTimeout(async () => { await loadMe(); route(); }, 0); });
+(async () => { await loadMe(); route(); })();
+</script>
+</body>
+</html>
