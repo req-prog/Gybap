@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>GYBAP</title>
+<title>GYBAP — видео и ГУБАПЫ</title>
+<meta name="description" content="GYBAP — видеохостинг: загружайте видео и короткие ГУБАПЫ, подписывайтесь на авторов, комментируйте.">
+<meta name="theme-color" content="#17a548">
+<meta property="og:title" content="GYBAP — видео и ГУБАПЫ">
+<meta property="og:description" content="Видеохостинг с короткими вертикальными роликами.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2317a548'/%3E%3Cpath d='M12 9l11 7-11 7z' fill='white'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Unbounded:wght@500;700;900&display=swap" rel="stylesheet">
@@ -193,6 +199,7 @@ const SUPABASE_KEY = 'sb_publishable_QxNWmZIdmXDZbUCgppFUpQ_0nykoUyo';
 const CHUNK = 50 * 1000 * 1000;          // размер одного кусочка: 50 МБ
 const GUBAP_MAX_SEC = 180;               // максимум длины ГУБАПа
 
+if (!window.supabase) { document.body.innerHTML = '<p style="padding:40px;font:16px sans-serif">Не удалось загрузить сервис. Проверьте интернет и обновите страницу.</p>'; throw new Error('supabase sdk'); }
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let me = null, authUser = null;
 let myLikes = new Set();
@@ -249,12 +256,21 @@ function login(mode = 'in') {
     <h2>${up ? 'Регистрация' : 'Вход'}</h2>
     <label>Почта<input id="aemail" type="email" autocomplete="email" inputmode="email"></label>
     <label>Пароль${up ? ' (минимум 6 символов)' : ''}<input id="apass" type="password" autocomplete="${up ? 'new-password' : 'current-password'}"></label>
+    ${up ? '' : '<a href="#" id="aforgot" class="muted small">Забыли пароль?</a>'}
     <div class="err" id="aerr"></div>
     <div class="row" style="justify-content:space-between">
       <button class="btn ghost" id="aswitch">${up ? 'Уже есть аккаунт' : 'Создать аккаунт'}</button>
       <div class="row"><button class="btn ghost" data-act="closeModal">Отмена</button>
       <button class="btn" id="ago">${up ? 'Зарегистрироваться' : 'Войти'}</button></div></div></div></div>`;
   $('#aswitch').onclick = () => login(up ? 'in' : 'up');
+  const fg = $('#aforgot');
+  if (fg) fg.onclick = async e => {
+    e.preventDefault();
+    const email = $('#aemail').value.trim(), err = $('#aerr');
+    if (!email) { err.textContent = 'Введите почту выше'; return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    err.textContent = error ? error.message : 'Письмо для сброса пароля отправлено';
+  };
   const go = async () => {
     const email = $('#aemail').value.trim(), password = $('#apass').value, err = $('#aerr'), btn = $('#ago');
     if (!email || !password) { err.textContent = 'Введите почту и пароль'; return; }
@@ -303,7 +319,7 @@ function renderHeader() {
 function toggleMenu() {
   const host = $('#menuHost');
   if (host.innerHTML) { host.innerHTML = ''; return; }
-  host.innerHTML = `<div class="menu"><div class="who">@${esc(me.nick)}${chk(me)}</div>
+  host.innerHTML = `<div class="menu"><div class="who">@${esc(me.nick)}${chk(me)}${isAdm ? ' <span class="tag">админ</span>' : ''}</div>
     ${isAdm ? '<a href="#/admin">Админ-панель</a>' : ''}
     <a href="#/channel/${me.id}">Мой канал</a>
     <a href="#/studio">Мастерская</a>
@@ -349,6 +365,18 @@ function openProfile(first = false) {
     } catch (e) {
       err.textContent = e.code === '23505' ? 'Этот ник уже занят' : (e.message || 'Ошибка'); btn.disabled = false;
     }
+  };
+}
+function openNewPass() {
+  $('#modalHost').innerHTML = `<div class="back"><div class="modal" role="dialog" aria-label="Новый пароль"><h2>Новый пароль</h2>
+    <label>Пароль (минимум 6 символов)<input id="np" type="password" autocomplete="new-password"></label><div class="err" id="nerr"></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" id="ngo">Сохранить</button></div></div></div>`;
+  $('#ngo').onclick = async () => {
+    const p = $('#np').value;
+    if (p.length < 6) { $('#nerr').textContent = 'Минимум 6 символов'; return; }
+    const { error } = await sb.auth.updateUser({ password: p });
+    if (error) { $('#nerr').textContent = error.message; return; }
+    closeModal(); toast('Пароль изменён');
   };
 }
 function closeModal() { $('#modalHost').innerHTML = ''; }
@@ -584,6 +612,7 @@ function videoMeta(file) {
 async function doUpload() {
   const file = $('#ufile').files[0], title = $('#utitle').value.trim(), kind = $('#ukind').value, err = $('#uerr');
   if (!file) { err.textContent = 'Выберите видеофайл'; return; }
+  if (!file.type.startsWith('video/')) { err.textContent = 'Это не видеофайл'; return; }
   if (!title) { err.textContent = 'Введите название'; return; }
   err.textContent = ''; $('#ugo').disabled = true; $('#ucancel').disabled = true; $('#uprog').hidden = false;
   const stat = $('#ustat'), bar = $('#ubar');
@@ -632,8 +661,10 @@ const actions = {
   sound() { soundOn = !soundOn; $$('.reel video').forEach(v => v.muted = !soundOn); toast(soundOn ? 'Звук включён' : 'Звук выключен'); },
   async like(el) {
     if (needLogin()) return;
+    if (el.dataset.busy) return; el.dataset.busy = '1';
     const id = el.dataset.id, was = myLikes.has(id);
     const r = was ? await sb.from('likes').delete().eq('video_id', id).eq('user_id', me.id) : await sb.from('likes').insert({ video_id: id, user_id: me.id });
+    delete el.dataset.busy;
     if (r.error) return toast(r.error.message);
     was ? myLikes.delete(id) : myLikes.add(id);
     el.classList.toggle('on', !was);
@@ -779,7 +810,8 @@ function route() {
   else viewHome();
 }
 window.addEventListener('hashchange', route);
-sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_IN' || ev === 'SIGNED_OUT') setTimeout(async () => { await loadMe(); route(); }, 0); });
+sb.auth.onAuthStateChange((ev) => {
+  if (ev === 'PASSWORD_RECOVERY') setTimeout(openNewPass, 600); if (ev === 'SIGNED_IN' || ev === 'SIGNED_OUT') setTimeout(async () => { await loadMe(); route(); }, 0); });
 (async () => { await loadMe(); route(); })();
 </script>
 </body>
