@@ -707,12 +707,15 @@ const actions = {
       const p = deferredInstall; deferredInstall = null; p.prompt();
       await p.userChoice.catch(() => {}); renderHeader(); return;
     }
+    const need = ['manifest.webmanifest', 'sw.js', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'], miss = [];
+    await Promise.all(need.map(async f => { try { const r = await fetch(f, { cache: 'no-store' }); if (!r.ok) miss.push(f); } catch { miss.push(f); } }));
+    const warn = miss.length ? `<div class="err" style="min-height:0">Установка недоступна: на сайте не найдены файлы: ${miss.map(esc).join(', ')}. Загрузите их в ту же папку, где лежит index.html (папку icons целиком), подождите минуту и обновите страницу.</div>` : '';
     const how = isIOS
       ? '<li>Откройте сайт в <b>Safari</b>.</li><li>Нажмите кнопку <b>«Поделиться»</b> (квадрат со стрелкой вверх).</li><li>Выберите <b>«На экран “Домой”»</b> и нажмите «Добавить».</li>'
       : '<li>Откройте меню браузера (три точки <b>⋮</b> или <b>≡</b>).</li><li>Выберите <b>«Установить приложение»</b> или <b>«Добавить на главный экран»</b>.</li><li>Подтвердите, и ярлык появится на устройстве.</li>';
     $('#modalHost').innerHTML = `<div class="back"><div class="modal" role="dialog" aria-label="Установка">
       <h2>Установить GYBAP</h2><p class="muted small" style="margin:0">Приложение откроется в отдельном окне, как обычное, и ярлык будет на рабочем столе или главном экране.</p>
-      <ol class="steps">${how}</ol>
+      ${warn}<ol class="steps">${how}</ol>
       <div class="row" style="justify-content:flex-end"><button class="btn" data-act="closeModal">Понятно</button></div></div></div>`;
   },
   closeSheet() { $('#sheetHost').innerHTML = ''; },
